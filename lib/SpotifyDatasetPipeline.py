@@ -1,4 +1,5 @@
-from typing import Iterable
+from typing import Iterable, Callable
+from pandas import DataFrame
 
 from lib.load_dataset import load_spotify_dataset
 
@@ -8,7 +9,7 @@ filter_columns = lambda columns_to_filter, dataframe: [column for column in colu
 drop_columns = lambda dataframe, columns_to_drop: dataframe.drop(columns=filter_columns(columns_to_drop, dataframe))
 
 
-def make_pipeline(columns_to_drop: Iterable[str]):
+def make_pipeline(columns_to_drop: Iterable[str]) -> list[tuple[str, Callable[[DataFrame], DataFrame]]]:
     return [
         ("drop duplicates", lambda element: element.drop_duplicates(ignore_index=True)),
         ("drop columns", lambda element: element.drop(columns=list(columns_to_drop))),
