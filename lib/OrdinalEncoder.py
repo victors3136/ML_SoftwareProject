@@ -1,6 +1,9 @@
 from numbers import Number
 from typing import Iterable, Any, MutableMapping
+
+import numpy as np
 from pandas import DataFrame
+
 
 class OrdinalEncoder:
     def __init__(self, reversible: bool = False):
@@ -23,6 +26,25 @@ class OrdinalEncoder:
         if not self.reversible:
             raise TypeError("Encoder is not reversible")
         return [self.reverse_map[value] for value in collection]
+
+
+class ContinuousRangeNormalizer:
+    @staticmethod
+    def fit_to_0_1(collection: Iterable[Number]) -> Iterable[Number]:
+        collection_min = np.min(collection)
+        collection_max = np.max(collection)
+        collection_range = collection_max - collection_min
+        mapping = lambda number: (number - collection_min) / collection_range
+        return map(mapping, collection)
+
+    @staticmethod
+    def fit_to_neg_1_pos_1(collection: Iterable[Number]) -> Iterable[Number]:
+        collection_min = np.min(collection)
+        collection_max = np.max(collection)
+        collection_range = collection_max - collection_min
+        mapping = lambda number: (2 * (number - collection_min) / collection_range) - 1
+        return map(mapping, collection)
+
 
 class DataFrameOrdinalEncoder:
 
@@ -49,6 +71,7 @@ class DataFrameOrdinalEncoder:
             restored[col] = enc.reverse(df[col])
         return restored
 
+
 def main() -> None:
     x = ['man', 'woman', 'child', 'man', 'man', 'woman', 'child', 'man', 'child']
     print(f"Before encoding: {x}")
@@ -73,6 +96,7 @@ def main() -> None:
 
     decoded = encoder.reverse(encoded)
     print("\nDecoded:\n", decoded)
+
 
 if __name__ == "__main__":
     main()
