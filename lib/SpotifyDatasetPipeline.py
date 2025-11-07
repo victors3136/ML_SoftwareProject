@@ -8,25 +8,36 @@ from .Data import LoadData
 
 type PipelineAction = Callable[[DataFrame], DataFrame]
 type PipelineStep = Tuple[LiteralString, PipelineAction]
-type PipelineFactory = Callable[[Optional[Iterable[str]]], List[PipelineStep]]
+type PipelineOptions = Iterable[LiteralString]
+type PipelineFactory = Callable[[Optional[Iterable[str]], PipelineOptions], List[PipelineStep]]
 
 _has_column = lambda dataframe: lambda column: column in dataframe.columns
 
 
-def _make_pipeline(columns_to_drop: Optional[Iterable[str]]) -> List[PipelineStep]:
-    columns_to_drop_from = lambda dataframe: filter(
-        _has_column(dataframe),
-        columns_to_drop or []
-    )
-    return [
-        ("drop columns", lambda dataframe: dataframe.drop(columns=columns_to_drop_from(dataframe))),
-        ("drop duplicates", lambda dataframe: dataframe.drop_duplicates(ignore_index=True)),
-        ("normalize", lambda dataframe: DataFrameNormalizer.fit(dataframe)),
-        ("encode ordinals", lambda dataframe: DataFrameEncoder().fit(dataframe)),
-    ]
+def full_options_included(*options) -> bool:
+    return "full" in options[0][0]
 
 
-Pipeline: PipelineFactory = lambda columns_to_drop: _make_pipeline(columns_to_drop)
+def _make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineStep]:
+    steps = []
+    print(options)
+    full_options = full_options_included(options)
+    if full_options or "drop columns" in options:
+        columns_to_drop_from = lambda dataframe: filter(
+            _has_column(dataframe),
+            discard or []
+        )
+        steps.append(("drop columns", lambda dataframe: dataframe.drop(columns=columns_to_drop_from(dataframe))))
+    if full_options or "drop duplicates" in options:
+        steps.append(("drop duplicates", lambda dataframe: dataframe.drop_duplicates(ignore_index=True)))
+    if full_options or "normalize" in options:
+        steps.append(("normalize", lambda dataframe: DataFrameNormalizer.fit(dataframe)))
+    if full_options or "encode ordinals" in options:
+        steps.append(("encode ordinals", lambda dataframe: DataFrameEncoder().fit(dataframe)))
+    return steps
+
+
+Pipeline: PipelineFactory = lambda discard=None, *options: _make_pipeline(discard, options)
 
 
 def apply(dataframe: DataFrame, pipeline: List[PipelineStep]) -> DataFrame:
@@ -52,7 +63,7 @@ def main() -> None:
     print("Head of the DataFrame before any processing:")
     _view_dataframe(dataframe, 29)
     print("===========================================")
-    pipeline = Pipeline(columns_to_drop=None)
+    pipeline = Pipeline(None, "full")
     for name, action in pipeline:
         print(f"Performing '{name}' step...")
         dataframe = action(dataframe)

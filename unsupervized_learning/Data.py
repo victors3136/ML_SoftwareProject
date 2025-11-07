@@ -25,7 +25,14 @@ _relevant_features: List[LiteralString] = [
 
 _irrelevant_features: List[LiteralString] = BaseFeatures.keys() - _relevant_features
 
-_pipeline = Pipeline(columns_to_drop=_irrelevant_features)
+# noinspection PyArgumentList
+_pipeline = Pipeline(
+    _irrelevant_features,
+    "drop duplicates",
+    "normalize",
+    "encode ordinals",
+    "drop columns"
+)
 
 
 class Cluster:
@@ -42,7 +49,6 @@ class Cluster:
 def main():
     data = Cluster(LoadData())
     print(data.head())
-
 
 
 if __name__ == "__main__":
