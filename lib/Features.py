@@ -1,19 +1,15 @@
 from numbers import Number
-from typing import Dict, Tuple, LiteralString, Optional, TypedDict, Literal, List, Iterable, Callable, Annotated
+from typing import Dict, Tuple, LiteralString, Optional, TypedDict, Literal, List, Iterable, Callable
 
 from pandas import DataFrame, isna
 
-type NullableRange = Optional[Tuple[Number, Number]]
-type NullableNumber = Optional[Number]
 type ColumnType = Literal["continuous", "discrete"]
 type FormatterType = Literal["ordinal", "numerical"]
-type NullableFormatterType = Optional[FormatterType]
 type NormalizerMap = Callable[[Iterable[Number]], Iterable[Number]]
 type EncoderMap = Callable[[Iterable[LiteralString]], Iterable[Number]]
 type FormatterMap = NormalizerMap | EncoderMap
-type NullableFormatterMap = Optional[FormatterMap]
 
-_base_features: Dict[LiteralString, Tuple[ColumnType, NullableRange]] = {
+_base_features: Dict[LiteralString, Tuple[ColumnType, Optional[Tuple[Number, Number]]]] = {
     'acousticness': ("continuous", (0, 1)),
     'analysis_url': ("discrete", None),
     'danceability': ("continuous", (0, 1)),
@@ -49,8 +45,8 @@ _base_features: Dict[LiteralString, Tuple[ColumnType, NullableRange]] = {
 class FeatureRow(TypedDict):
     column_name: LiteralString
     column_type: ColumnType
-    lower_bound: NullableNumber
-    upper_bound: NullableNumber
+    lower_bound: Optional[Number]
+    upper_bound: Optional[Number]
 
 
 _features_as_list: List[FeatureRow] = [
@@ -66,7 +62,7 @@ _features_as_list: List[FeatureRow] = [
 _spotify_dataset_features: DataFrame = DataFrame(_features_as_list)
 
 
-def _feature_type(row: FeatureRow) -> NullableFormatterType:
+def _feature_type(row: FeatureRow) -> Optional[FormatterType]:
     # name = row['column_name']
     feature_type = row['column_type']
     lower_bound = row['lower_bound']
@@ -86,12 +82,14 @@ def _feature_type(row: FeatureRow) -> NullableFormatterType:
     return None
 
 
+# noinspection PyTypeChecker
 OrdinalColumns = lambda: [
     row['column_name']
     for _, row in _spotify_dataset_features.iterrows()
     if _feature_type(row) == "ordinal"
 ]
 
+# noinspection PyTypeChecker
 NormalizableColumns = lambda: [
     row['column_name']
     for _, row in _spotify_dataset_features.iterrows()
