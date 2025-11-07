@@ -1,0 +1,15 @@
+[project]
+name = "spotify-songs-clustering"
+version = "0.1.0"
+requires-python = ">=3.12"
+readme = "README.md"
+authors = [
+  { name = "Victor" },
+  { name = "Ada" }
+]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100

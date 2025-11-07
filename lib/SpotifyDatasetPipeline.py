@@ -2,46 +2,52 @@ from typing import Iterable, Callable
 import pandas
 from pandas import DataFrame
 
-from lib.OrdinalEncoder import DataFrameOrdinalEncoder
-from lib.load_dataset import load_spotify_dataset
+from .Encoder import DataFrameEncoder
+from .Normalizer import DataFrameNormalizer
+from .Data import LoadData
 
-has_column = lambda dataframe: lambda column: column in dataframe.columns
+_has_column = lambda dataframe: lambda column: column in dataframe.columns
 
 
 def make_pipeline(columns_to_drop: Iterable[str] = None) -> list[tuple[str, Callable[[DataFrame], DataFrame]]]:
-    columns_to_drop_from = lambda dataframe: filter(has_column(dataframe),
-                                                    list(columns_to_drop) if columns_to_drop else [])
-    numerical_columns = lambda dataframe: dataframe.select_dtypes(exclude=['object']).columns.tolist()
-    categorical_columns = lambda dataframe: dataframe.select_dtypes(include=['object']).columns.tolist()
+    columns_to_drop_from = lambda dataframe: filter(
+        _has_column(dataframe),
+        columns_to_drop or []
+    )
     return [
         ("drop duplicates", lambda dataframe: dataframe.drop_duplicates(ignore_index=True)),
         ("drop columns", lambda dataframe: dataframe.drop(columns=columns_to_drop_from(dataframe))),
-        # TODO Add normalization for continuous columns
-        ("encode categorical columns", lambda dataframe: DataFrameOrdinalEncoder().fit(
-            dataframe, categorical_columns(dataframe)
-        ))
+        ("normalize", lambda dataframe: DataFrameNormalizer.fit(dataframe)),
+        ("encode ordinals", lambda dataframe: DataFrameEncoder().fit(dataframe)),
     ]
 
 
-def view_df(dataframe: DataFrame, max_col: int) -> None:
-    print("Head of the DataFrame before any processing:")
+def _view_dataframe(dataframe: DataFrame, max_col: int) -> None:
     initial_max_col_disp_sz = pandas.get_option('display.max_columns')
-    pandas.set_option('display.max_columns', max_col)
-    print(dataframe.head())
-    pandas.set_option('display.max_columns', initial_max_col_disp_sz)
+    try:
+        pandas.set_option('display.max_columns', max_col)
+        print(dataframe.head())
+    finally:
+        pandas.set_option('display.max_columns', initial_max_col_disp_sz)
 
 
 def main() -> None:
     print("Downloading and loading Spotify dataset...")
-    dataframe = load_spotify_dataset()
+    dataframe = LoadData()
     print(f"Loaded DataFrame with shape: {dataframe.shape}")
-    view_df(dataframe, 20)
+    print("===========================================")
+    print("Head of the DataFrame before any processing:")
+    _view_dataframe(dataframe, 29)
+    print("===========================================")
     pipeline = make_pipeline()
     for name, action in pipeline:
         print(f"Performing '{name}' step...")
         dataframe = action(dataframe)
         print(f"shape: {dataframe.shape}")
-    view_df(dataframe, 20)
+    print("===========================================")
+    print("Head of the DataFrame after processing:")
+    _view_dataframe(dataframe, 29)
+    print("===========================================")
 
 
 if __name__ == "__main__":

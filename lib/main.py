@@ -1,3 +1,4 @@
+from lib import SpotifyDatasetPipeline
 
 if __name__ == "__main__":
-    print("Hello World!")
+    SpotifyDatasetPipeline.main()
