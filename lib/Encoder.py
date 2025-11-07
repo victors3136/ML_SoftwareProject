@@ -44,7 +44,7 @@ class DataFrameEncoder:
 
     def fit(self, dataframe: DataFrame, columns: Optional[ColumnNameCollection] = None) -> DataFrame:
         if columns is None:
-            columns = OrdinalColumns()
+            columns = OrdinalColumns(dataframe)
 
         transformed = dataframe.copy()
         for col in columns:

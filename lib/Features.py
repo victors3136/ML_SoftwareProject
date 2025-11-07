@@ -9,7 +9,7 @@ type NormalizerMap = Callable[[Iterable[Number]], Iterable[Number]]
 type EncoderMap = Callable[[Iterable[LiteralString]], Iterable[Number]]
 type FormatterMap = NormalizerMap | EncoderMap
 
-_base_features: Dict[LiteralString, Tuple[ColumnType, Optional[Tuple[Number, Number]]]] = {
+BaseFeatures: Dict[LiteralString, Tuple[ColumnType, Optional[Tuple[Number, Number]]]] = {
     'acousticness': ("continuous", (0, 1)),
     'analysis_url': ("discrete", None),
     'danceability': ("continuous", (0, 1)),
@@ -56,7 +56,7 @@ _features_as_list: List[FeatureRow] = [
         'lower_bound': bounds[0] if bounds else None,
         'upper_bound': bounds[1] if bounds else None
     }
-    for name, (feature_type, bounds) in _base_features.items()
+    for name, (feature_type, bounds) in BaseFeatures.items()
 ]
 
 _spotify_dataset_features: DataFrame = DataFrame(_features_as_list)
@@ -83,17 +83,17 @@ def _feature_type(row: FeatureRow) -> Optional[FormatterType]:
 
 
 # noinspection PyTypeChecker
-OrdinalColumns = lambda: [
+OrdinalColumns = lambda dataframe: [
     row['column_name']
     for _, row in _spotify_dataset_features.iterrows()
-    if _feature_type(row) == "ordinal"
+    if _feature_type(row) == "ordinal" and row['column_name'] in dataframe.columns
 ]
 
 # noinspection PyTypeChecker
-NormalizableColumns = lambda: [
+NormalizableColumns = lambda dataframe: [
     row['column_name']
     for _, row in _spotify_dataset_features.iterrows()
-    if _feature_type(row) == "numerical"
+    if _feature_type(row) == "numerical" and row['column_name'] in dataframe.columns
 ]
 
 

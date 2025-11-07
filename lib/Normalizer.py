@@ -30,7 +30,7 @@ class DataFrameNormalizer:
     @staticmethod
     def fit(dataframe: DataFrame, columns: Optional[Iterable[str]] = None) -> DataFrame:
         if columns is None:
-            columns = NormalizableColumns()
+            columns = NormalizableColumns(dataframe)
 
         transformed = dataframe.copy()
         for col in columns:

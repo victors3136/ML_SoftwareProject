@@ -19,14 +19,20 @@ def _make_pipeline(columns_to_drop: Optional[Iterable[str]]) -> List[PipelineSte
         columns_to_drop or []
     )
     return [
-        ("drop duplicates", lambda dataframe: dataframe.drop_duplicates(ignore_index=True)),
         ("drop columns", lambda dataframe: dataframe.drop(columns=columns_to_drop_from(dataframe))),
+        ("drop duplicates", lambda dataframe: dataframe.drop_duplicates(ignore_index=True)),
         ("normalize", lambda dataframe: DataFrameNormalizer.fit(dataframe)),
         ("encode ordinals", lambda dataframe: DataFrameEncoder().fit(dataframe)),
     ]
 
 
-Pipeline: PipelineFactory = lambda columns_to_drop=None: _make_pipeline(columns_to_drop)
+Pipeline: PipelineFactory = lambda columns_to_drop: _make_pipeline(columns_to_drop)
+
+
+def apply(dataframe: DataFrame, pipeline: List[PipelineStep]) -> DataFrame:
+    for name, action in pipeline:
+        dataframe = action(dataframe)
+    return dataframe
 
 
 def _view_dataframe(dataframe: DataFrame, max_col: int) -> None:
@@ -46,7 +52,7 @@ def main() -> None:
     print("Head of the DataFrame before any processing:")
     _view_dataframe(dataframe, 29)
     print("===========================================")
-    pipeline = Pipeline()
+    pipeline = Pipeline(columns_to_drop=None)
     for name, action in pipeline:
         print(f"Performing '{name}' step...")
         dataframe = action(dataframe)
