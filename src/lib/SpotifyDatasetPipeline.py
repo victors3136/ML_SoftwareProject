@@ -3,9 +3,9 @@ import pandas
 from pandas import DataFrame
 from tqdm import tqdm
 
-from .Encoder import DataFrameEncoder
-from .Normalizer import DataFrameNormalizer
-from .Data import load_data
+from lib.Encoder import DataFrameEncoder
+from lib.Normalizer import DataFrameNormalizer
+from lib.Data import load_data
 
 type PipelineAction = Callable[[DataFrame], DataFrame]
 type PipelineStep = Tuple[LiteralString, PipelineAction]
@@ -21,8 +21,6 @@ def full_options_included(*options) -> bool:
 
 def make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineStep]:
     steps = []
-    # options = options[0]
-    print(options)
     full_options = full_options_included(options)
     if full_options or "drop columns" in options:
         columns_to_drop_from = lambda dataframe: filter(

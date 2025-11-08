@@ -69,8 +69,6 @@ def _feature_type(row: FeatureRow) -> Optional[FormatterType]:
     lower_bound = row["lower_bound"]
     upper_bound = row["upper_bound"]
 
-    print(row)
-    print(get_feature_info(name))
     lower_bound = None if isna(lower_bound) else lower_bound
     upper_bound = None if isna(upper_bound) else upper_bound
 

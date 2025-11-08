@@ -4,7 +4,7 @@ from typing import Iterable, MutableMapping, LiteralString, List, Optional
 from pandas import DataFrame
 from tqdm import tqdm
 
-from .Features import ordinal_columns
+from lib.Features import ordinal_columns
 
 type CodeMap = MutableMapping[LiteralString, Number]
 type ReverseCodeMap = MutableMapping[Number, LiteralString]

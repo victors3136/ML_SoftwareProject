@@ -5,7 +5,7 @@ import numpy as np
 from pandas import DataFrame
 from tqdm import tqdm
 
-from .Features import normalizable_columns, get_feature_info
+from lib.Features import normalizable_columns, get_feature_info
 
 
 class Normalizer:
