@@ -1,3 +1,4 @@
 kagglehub>=0.3.0
 pandas>=2.3.3
-numpy>=1.26
+numpy>=2.3.4
+scipy-stubs>=1.16.3.0

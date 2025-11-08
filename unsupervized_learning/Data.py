@@ -1,12 +1,14 @@
 from typing import LiteralString, List
 
+import pandas
 from pandas import DataFrame, Series
 
-from lib.Data import LoadData
+from lib.Data import load_data
 from lib.Features import BaseFeatures
-from lib.SpotifyDatasetPipeline import Pipeline, apply
+from lib.SpotifyDatasetPipeline import make_pipeline, pipeline_apply
 
 _relevant_features: List[LiteralString] = [
+    'id',
     'acousticness',
     'danceability',
     'energy',
@@ -26,7 +28,7 @@ _relevant_features: List[LiteralString] = [
 _irrelevant_features: List[LiteralString] = BaseFeatures.keys() - _relevant_features
 
 # noinspection PyArgumentList
-_pipeline = Pipeline(
+_pipeline = make_pipeline(
     _irrelevant_features,
     "drop duplicates",
     "normalize",
@@ -37,7 +39,7 @@ _pipeline = Pipeline(
 
 class Cluster:
     def __init__(self, data: DataFrame):
-        self._data: DataFrame = apply(data, _pipeline)
+        self._data: DataFrame = pipeline_apply(data, _pipeline)
 
     def centroid(self) -> Series:
         pass
@@ -45,10 +47,27 @@ class Cluster:
     def head(self):
         return self._data.head()
 
+    @property
+    def data(self):
+        return self._data
+
 
 def main():
-    data = Cluster(LoadData())
-    print(data.head())
+    dataset: DataFrame = load_data()
+    initial_max_col_disp_sz = pandas.get_option('display.max_columns')
+    try:
+        pandas.set_option('display.max_columns', 29)
+        print(dataset.head(10))
+    finally:
+        pandas.set_option('display.max_columns', initial_max_col_disp_sz)
+
+    data = Cluster(dataset)
+    initial_max_col_disp_sz = pandas.get_option('display.max_columns')
+    try:
+        pandas.set_option('display.max_columns', 29)
+        print(data.data.head(10))
+    finally:
+        pandas.set_option('display.max_columns', initial_max_col_disp_sz)
 
 
 if __name__ == "__main__":

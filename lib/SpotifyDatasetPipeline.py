@@ -4,7 +4,7 @@ from pandas import DataFrame
 
 from .Encoder import DataFrameEncoder
 from .Normalizer import DataFrameNormalizer
-from .Data import LoadData
+from .Data import load_data
 
 type PipelineAction = Callable[[DataFrame], DataFrame]
 type PipelineStep = Tuple[LiteralString, PipelineAction]
@@ -18,8 +18,9 @@ def full_options_included(*options) -> bool:
     return "full" in options[0][0]
 
 
-def _make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineStep]:
+def make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineStep]:
     steps = []
+    # options = options[0]
     print(options)
     full_options = full_options_included(options)
     if full_options or "drop columns" in options:
@@ -37,10 +38,7 @@ def _make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineS
     return steps
 
 
-Pipeline: PipelineFactory = lambda discard=None, *options: _make_pipeline(discard, options)
-
-
-def apply(dataframe: DataFrame, pipeline: List[PipelineStep]) -> DataFrame:
+def pipeline_apply(dataframe: DataFrame, pipeline: List[PipelineStep]) -> DataFrame:
     for name, action in pipeline:
         dataframe = action(dataframe)
     return dataframe
@@ -57,13 +55,13 @@ def _view_dataframe(dataframe: DataFrame, max_col: int) -> None:
 
 def main() -> None:
     print("Downloading and loading Spotify dataset...")
-    dataframe = LoadData()
+    dataframe = load_data()
     print(f"Loaded DataFrame with shape: {dataframe.shape}")
     print("===========================================")
     print("Head of the DataFrame before any processing:")
     _view_dataframe(dataframe, 29)
     print("===========================================")
-    pipeline = Pipeline(None, "full")
+    pipeline = make_pipeline(None, "full")
     for name, action in pipeline:
         print(f"Performing '{name}' step...")
         dataframe = action(dataframe)

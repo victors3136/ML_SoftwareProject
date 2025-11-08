@@ -1,10 +1,11 @@
 from numbers import Number
-from typing import Iterable, Optional
+from typing import Iterable, Optional, LiteralString
 
 import numpy as np
 from pandas import DataFrame
+from scipy.signal import get_window
 
-from .Features import NormalizableColumns
+from .Features import normalizable_columns, get_feature_info
 
 
 class Normalizer:
@@ -28,11 +29,24 @@ class Normalizer:
 class DataFrameNormalizer:
 
     @staticmethod
+    def column_not_already_normalized(column_name: LiteralString) -> bool:
+        info = get_feature_info(column_name)
+        assert info is not None
+        assert info['column_type'] != 'numerical'
+        assert info['lower_bound'] is not None
+        assert info['upper_bound'] is not None
+        return info['lower_bound'] != 0 or info['upper_bound'] != 1
+
+    @staticmethod
     def fit(dataframe: DataFrame, columns: Optional[Iterable[str]] = None) -> DataFrame:
         if columns is None:
-            columns = NormalizableColumns(dataframe)
+            columns = normalizable_columns(dataframe)
 
         transformed = dataframe.copy()
-        for col in columns:
+
+        for col in filter(
+                DataFrameNormalizer.column_not_already_normalized,
+                columns
+        ):
             transformed[col] = Normalizer.fit_to_0_1(dataframe[col])
         return transformed

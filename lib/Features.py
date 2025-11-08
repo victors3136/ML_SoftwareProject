@@ -63,38 +63,49 @@ _spotify_dataset_features: DataFrame = DataFrame(_features_as_list)
 
 
 def _feature_type(row: FeatureRow) -> Optional[FormatterType]:
-    # name = row['column_name']
-    feature_type = row['column_type']
-    lower_bound = row['lower_bound']
-    upper_bound = row['upper_bound']
+    name = row["column_name"]
 
+    feature_type = row["column_type"]
+    lower_bound = row["lower_bound"]
+    upper_bound = row["upper_bound"]
+
+    print(row)
+    print(get_feature_info(name))
     lower_bound = None if isna(lower_bound) else lower_bound
     upper_bound = None if isna(upper_bound) else upper_bound
 
-    match (feature_type, lower_bound, upper_bound):
-        case ("discrete", None, None):
+    match (name, feature_type, lower_bound, upper_bound):
+        case ("id" | "track_id" | "playlist_id" | "uri", _, _, _):
+            return None
+
+        case (_, "discrete", None, None):
             return "ordinal"
 
-        case ("discrete", Number(), Number()) \
-             | ("continuous", None, None) \
-             | ("continuous", Number(), Number()):
+        case (_, "continuous" | "discrete", Number(), Number()) | (_, "continuous", None, None):
             return "numerical"
-    return None
+
+
+def get_feature_info(name: LiteralString) -> Optional[FeatureRow]:
+    # noinspection PyTypeChecker
+    return _spotify_dataset_features[_spotify_dataset_features["column_name"] == name].iloc[0].to_dict()
 
 
 # noinspection PyTypeChecker
-OrdinalColumns = lambda dataframe: [
-    row['column_name']
-    for _, row in _spotify_dataset_features.iterrows()
-    if _feature_type(row) == "ordinal" and row['column_name'] in dataframe.columns
-]
+def ordinal_columns(dataframe: DataFrame) -> List[LiteralString]:
+    return [
+        row["column_name"]
+        for _, row in _spotify_dataset_features.iterrows()
+        if _feature_type(row) == "ordinal" and row["column_name"] in dataframe.columns
+    ]
+
 
 # noinspection PyTypeChecker
-NormalizableColumns = lambda dataframe: [
-    row['column_name']
-    for _, row in _spotify_dataset_features.iterrows()
-    if _feature_type(row) == "numerical" and row['column_name'] in dataframe.columns
-]
+def normalizable_columns(dataframe: DataFrame) -> List[LiteralString]:
+    return [
+        row["column_name"]
+        for _, row in _spotify_dataset_features.iterrows()
+        if _feature_type(row) == "numerical" and row["column_name"] in dataframe.columns
+    ]
 
 
 def main() -> None:

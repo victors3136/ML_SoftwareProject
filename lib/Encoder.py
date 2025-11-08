@@ -3,7 +3,7 @@ from typing import Iterable, MutableMapping, LiteralString, List, Optional
 
 from pandas import DataFrame
 
-from .Features import OrdinalColumns
+from .Features import ordinal_columns
 
 type CodeMap = MutableMapping[LiteralString, Number]
 type ReverseCodeMap = MutableMapping[Number, LiteralString]
@@ -44,7 +44,7 @@ class DataFrameEncoder:
 
     def fit(self, dataframe: DataFrame, columns: Optional[ColumnNameCollection] = None) -> DataFrame:
         if columns is None:
-            columns = OrdinalColumns(dataframe)
+            columns = ordinal_columns(dataframe)
 
         transformed = dataframe.copy()
         for col in columns:
