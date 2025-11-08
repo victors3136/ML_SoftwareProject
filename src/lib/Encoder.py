@@ -2,6 +2,7 @@ from numbers import Number
 from typing import Iterable, MutableMapping, LiteralString, List, Optional
 
 from pandas import DataFrame
+from tqdm import tqdm
 
 from .Features import ordinal_columns
 
@@ -46,8 +47,8 @@ class DataFrameEncoder:
         if columns is None:
             columns = ordinal_columns(dataframe)
 
-        transformed = dataframe.copy()
-        for col in columns:
+        transformed = dataframe
+        for col in tqdm(columns, "Encoding columns... "):
             enc = Encoder(reversible=self.reversible)
             transformed[col] = enc.fit(dataframe[col])
             self.encoders[col] = enc
@@ -56,8 +57,8 @@ class DataFrameEncoder:
     def reverse(self, dataframe: DataFrame) -> DataFrame:
         if not self.reversible:
             raise TypeError("Encoder is not reversible")
-        restored = dataframe.copy()
-        for col, enc in self.encoders.items():
+        restored = dataframe
+        for col, enc in tqdm(self.encoders.items(), "Decoding columns... "):
             restored[col] = enc.reverse(dataframe[col])
         return restored
 

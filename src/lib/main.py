@@ -1,4 +1,4 @@
-from lib import SpotifyDatasetPipeline
+from src.lib import SpotifyDatasetPipeline
 
 if __name__ == "__main__":
     SpotifyDatasetPipeline.main()

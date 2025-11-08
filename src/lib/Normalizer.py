@@ -3,7 +3,7 @@ from typing import Iterable, Optional, LiteralString
 
 import numpy as np
 from pandas import DataFrame
-from scipy.signal import get_window
+from tqdm import tqdm
 
 from .Features import normalizable_columns, get_feature_info
 
@@ -42,11 +42,12 @@ class DataFrameNormalizer:
         if columns is None:
             columns = normalizable_columns(dataframe)
 
-        transformed = dataframe.copy()
+        transformed = dataframe
 
-        for col in filter(
-                DataFrameNormalizer.column_not_already_normalized,
-                columns
-        ):
+        for col in tqdm(
+                filter(
+                    DataFrameNormalizer.column_not_already_normalized,
+                    columns
+                ), "Normalizing columns... "):
             transformed[col] = Normalizer.fit_to_0_1(dataframe[col])
         return transformed

@@ -3,9 +3,9 @@ from typing import LiteralString, List
 import pandas
 from pandas import DataFrame, Series
 
-from lib.Data import load_data
-from lib.Features import BaseFeatures
-from lib.SpotifyDatasetPipeline import make_pipeline, pipeline_apply
+from src.lib.Data import load_data
+from src.lib.Features import BaseFeatures
+from src.lib.SpotifyDatasetPipeline import make_pipeline, pipeline_apply
 
 _relevant_features: List[LiteralString] = [
     'id',

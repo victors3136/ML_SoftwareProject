@@ -4,6 +4,8 @@ from pandas import concat, DataFrame, read_csv
 from kagglehub import dataset_download
 from pathlib import Path
 
+from tqdm import tqdm
+
 _dataset_id = "solomonameh/spotify-music-dataset"
 
 
@@ -22,7 +24,7 @@ def load_data() -> DataFrame:
         raise FileNotFoundError(f"No CSV files found under {root}")
 
     dataframes = []
-    for file in csv_files:
+    for file in tqdm(csv_files, "Reading CSV files... "):
         try:
             dataframe = read_csv(file)
             dataframes.append(dataframe)

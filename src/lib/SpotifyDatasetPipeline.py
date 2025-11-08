@@ -1,6 +1,7 @@
 from typing import Iterable, Callable, LiteralString, List, Tuple, Optional
 import pandas
 from pandas import DataFrame
+from tqdm import tqdm
 
 from .Encoder import DataFrameEncoder
 from .Normalizer import DataFrameNormalizer
@@ -39,7 +40,7 @@ def make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineSt
 
 
 def pipeline_apply(dataframe: DataFrame, pipeline: List[PipelineStep]) -> DataFrame:
-    for name, action in pipeline:
+    for name, action in tqdm(pipeline, "Processing DataFrame..."):
         dataframe = action(dataframe)
     return dataframe
 
