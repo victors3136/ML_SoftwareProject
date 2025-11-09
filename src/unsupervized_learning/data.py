@@ -28,15 +28,13 @@ _irrelevant_features: List[str] = list(set(BaseFeatures.keys()) - set(_relevant_
 _pipeline = make_pipeline(
     _irrelevant_features,
     "drop duplicates",
-    "normalize",
-    "encode ordinals",
     "drop columns"
 )
 
 
 class Cluster:
-    def __init__(self, data: Frame):
-        self._data: Frame = pipeline_apply(data, _pipeline)
+    def __init__(self, frame: Frame):
+        self._data: Frame = pipeline_apply(frame, _pipeline)
 
     def centroid(self) -> Dict[str, float]:
         return self._data.column_means()
