@@ -27,8 +27,16 @@ class Frame:
     def shape(self) -> tuple[Number, Number]:
         return self._row_count, len(self._column_keys)
 
-    def __getitem__(self, column: str) -> list[Any]:
-        return self._data[column]
+    def __getitem__(self, key: str | int | range) -> dict[str, Any] | list[dict[str, Any]]:
+        match key:
+            case str():
+                return self._data[key]
+            case int():
+                return self.get_row(key)
+            case range():
+                return [
+                    self.get_row(index) for index in range(key.start, key.stop, key.step)
+                ]
 
     def get_row(self, index: int) -> dict[str, Any]:
         if index < 0 or index >= self._row_count:
