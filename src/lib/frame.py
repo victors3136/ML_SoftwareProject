@@ -30,6 +30,14 @@ class Frame:
     def __getitem__(self, column: str) -> list[Any]:
         return self._data[column]
 
+    def get_row(self, index: int) -> dict[str, Any]:
+        if index < 0 or index >= self._row_count:
+            raise IndexError("Index out of range")
+        return {
+            column_key: values[index]
+            for column_key, values in self._data.items()
+        }
+
     def __setitem__(self, column: str, values: Iterable[Any]) -> None:
         values_list = list(values)
         if self._column_keys:
