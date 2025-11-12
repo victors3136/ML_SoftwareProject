@@ -37,7 +37,6 @@ _pipeline = make_pipeline(
 
 class VectorNode:
     def __init__(self, frame: Frame):
-        frame = pipeline_apply(frame, _pipeline)
         assert frame.shape[0] == 1, f"A node must represent a single row, not {frame.shape[0]}"
         row_data: dict[str, Number] = frame.get_row(0)
         assert all(
@@ -61,13 +60,19 @@ class VectorNode:
     def __str__(self):
         return str(self.data)
 
+    def __repr__(self):
+        return str(self.data)
+
 
 class Cluster:
     def __init__(self, *, centroid: VectorNode | None, nodes: List[VectorNode] | None = None):
         self.nodes = nodes or list()
-        self.centroid = centroid or self.compute_centroid()
+        self.centroid = centroid
+        if self.centroid is None:
+            self.centroid = self.compute_centroid()
         assert self.nodes is not None, "The list of nodes cannot be empty at the end of __init__"
         assert self.centroid is not None, "The centroid cannot be empty at the end of __init__"
+        assert all(node.keys() == self.centroid.keys() for node in self.nodes), "All nodes must have the same keys"
 
     def __add__(self, other: VectorNode | Cluster) -> Cluster:
         if isinstance(other, VectorNode):
@@ -76,29 +81,48 @@ class Cluster:
             self.nodes.extend(other.nodes)
         return self
 
-    def compute_centroid(self) -> VectorNode:
+    @staticmethod
+    def average_fields(key_set: set[str], nodes: list[VectorNode]):
         return VectorNode(
             Frame({
                 key: [
-                    np.average(
+                    np.average([
                         node[key]
-                        for node in self.nodes
-                    )
-                ] for key in self.centroid.keys()
+                        for node in nodes
+                    ]) if key != 'id' else None
+                ] for key in key_set
             })
         )
 
+    def compute_centroid(self) -> VectorNode:
+        match (self.centroid, self.nodes):
+            case None, None:
+                raise ValueError("Cannot compute centroid of an empty cluster")
+            case centroid, None:
+                return centroid
+            case None, nodes:
+                if not nodes:
+                    raise ValueError("Cannot compute centroid of an empty cluster")
+                return Cluster.average_fields(set(nodes[0].keys()), nodes)
+            case centroid, nodes:
+                return Cluster.average_fields(set(centroid.keys()), nodes)
+
     def __str__(self):
-        return f"Cluster(centroid={self.centroid}, nodes={self.nodes})"
+        return f"Cluster(centroid={self.centroid},\n nodes={
+        '\n'.join(str(node) for node in self.nodes)
+        })"
 
 
 if __name__ == "__main__":
-    dataset: Frame = load_data()
-    print(dataset)
+    dataset: Frame = pipeline_apply(load_data(), _pipeline)
+
     first_row = dataset.get_row(0)
     vector_node = VectorNode(
         Frame({
             key: [value] for key, value in first_row.items()
         })
     )
-    print(vector_node)
+
+    cluster = Cluster(centroid=None, nodes=[vector_node])
+
+    print(cluster)
