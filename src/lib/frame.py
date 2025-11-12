@@ -8,7 +8,7 @@ from lib.framework_types import FrameData, Number, NumberType
 
 class Frame:
 
-    def __init__(self, data: Optional[FrameData] = None, shuffle_data: bool = False):
+    def __init__(self, data: Optional[FrameData] = None, shuffle: bool = False):
         data: FrameData = data or {}
         lengths: set[int] = set(len(col) for col in data.values())
         if len(lengths) > 1:
@@ -16,7 +16,7 @@ class Frame:
         self._data: FrameData = dict(data)
         self._column_keys: list[str] = list(data.keys())
         self._row_count: int = next(iter(lengths)) if lengths else 0
-        if shuffle_data:
+        if shuffle:
             self._inplace_shuffle()
 
     @property
@@ -176,7 +176,7 @@ class Frame:
         return Frame(shuffled_data)
 
     @staticmethod
-    def concatenate(frames: list[Frame]) -> Frame:
+    def concatenate(frames: list[Frame], *, shuffle: bool = False) -> Frame:
         if not frames:
             return Frame()
         columns: list[str] = []
@@ -197,7 +197,7 @@ class Frame:
                     data[column].extend([None] * row_count)
                 else:
                     data[column].extend(column_data)
-        return Frame(data)
+        return Frame(data, shuffle=shuffle)
 
     @staticmethod
     def from_csv(path: Path) -> Frame:

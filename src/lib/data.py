@@ -18,7 +18,7 @@ def _find_csv_files(root: Path) -> List[Path]:
     return sorted(root.rglob("*.csv"))
 
 
-def load_data() -> Frame:
+def load_data(*, shuffle: bool = False) -> Frame:
     root: Path = _download_dataset()
     csv_files: List[Path] = _find_csv_files(root)
     if not csv_files:
@@ -38,4 +38,4 @@ def load_data() -> Frame:
     if len(frames) == 1:
         return frames[0]
 
-    return Frame.concatenate(frames)
+    return Frame.concatenate(frames, shuffle=shuffle)
