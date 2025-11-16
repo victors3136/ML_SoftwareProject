@@ -44,6 +44,26 @@ class Normalizer:
         return list(map(mapping, collection))
 
     @staticmethod
+    def fit_to_normal_distribution(collection: Iterable[Number | None]) -> Iterable[Number | None]:
+        values = [value for value in collection if isinstance(value, NumberType)]
+        if not values:
+            return list(collection)
+
+        mean = float(np.mean(values))
+        standard_deviation = float(np.std(values))
+
+        if standard_deviation == 0:
+            return list(collection)
+
+        def mapping(number: Number | None) -> Number | None:
+            if not isinstance(number, NumberType):
+                return number
+            # noinspection PyTypeChecker
+            return (float(number) - mean) / standard_deviation
+
+        return list(map(mapping, collection))
+
+    @staticmethod
     def fit_to_neg_1_pos_1(collection: Iterable[Number | None]) -> Iterable[Number | None]:
         features = Normalizer.get_column_features(collection)
 
@@ -81,9 +101,7 @@ class DataFrameNormalizer:
 
         transformed = dataframe
 
-        for column in filter(
-                lambda column_data: not DataFrameNormalizer.column_already_normalized(column_data),
-                columns
-        ):
-            transformed[column] = Normalizer.fit_to_0_1(dataframe[column])
+        for column in columns:
+            # noinspection PyTypeChecker
+            transformed[column] = Normalizer.fit_to_normal_distribution(dataframe[column])
         return transformed

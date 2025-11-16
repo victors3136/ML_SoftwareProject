@@ -39,7 +39,7 @@ def make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineSt
     return steps
 
 
-def pipeline_apply(frame: Frame, steps: List[PipelineStep]) -> Frame:
+def apply_pipeline(frame: Frame, steps: List[PipelineStep]) -> Frame:
     for step_name, apply_step in steps:
         # print(f"Performing '{step_name}' step. Dataframe has the dimensions: {frame.shape}")
         frame = apply_step(frame)
