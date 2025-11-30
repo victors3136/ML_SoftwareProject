@@ -1,8 +1,8 @@
+from __future__ import annotations
 from typing import Iterable, Optional, Any
 import csv
 import random
 from pathlib import Path
-
 from lib.framework_types import FrameData, Number, NumberType
 
 

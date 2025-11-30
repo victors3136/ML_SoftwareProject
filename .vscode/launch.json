@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run package",
+            "type": "python",
+            "request": "launch",
+            "module": "supervized_learning.main",
+            "cwd": "${workspaceFolder}",
+            "env": { "PYTHONPATH": "${workspaceFolder}/src" },
+            "justMyCode": true
+        }
+    ]
+}
