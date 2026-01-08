@@ -3,8 +3,6 @@ from typing import List
 from kagglehub import dataset_download
 from pathlib import Path
 
-from tqdm import tqdm
-
 from lib.frame import Frame
 
 _kaggle_dataset_id = "solomonameh/spotify-music-dataset"
@@ -25,7 +23,7 @@ def load_data(*, shuffle: bool = False) -> Frame:
         raise FileNotFoundError(f"No CSV files found under {root}")
 
     frames: List[Frame] = []
-    for file in tqdm(csv_files, "Reading CSV files... "):
+    for file in csv_files:
         try:
             frame = Frame.from_csv(file)
             frames.append(frame)

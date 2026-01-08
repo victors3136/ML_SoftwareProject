@@ -2,7 +2,6 @@ from numbers import Number
 from typing import Iterable, Optional, LiteralString
 
 import numpy as np
-from tqdm import tqdm
 
 from lib.frame import Frame
 from lib.features import normalizable_columns, get_feature_info
