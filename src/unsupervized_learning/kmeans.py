@@ -1,102 +1,64 @@
-from dataclasses import dataclass
-from typing import Iterable, Optional
+import numpy as np
 import random
+from typing import List
 
-from lib.data import load_data
-from src.lib.frame import Frame
-from unsupervized_learning.metrics import ClusteringMetric, NotImplementedMetric
-
-
-@dataclass(frozen=True)
-class AlgorithmConfiguration:
-    cluster_count: int
-    random_state: Optional[int] = None
-
-
-def _numeric_columns(dataframe: Frame) -> list[str]:
-    numeric_columns = dataframe.numeric_columns()
-    if not numeric_columns:
-        raise ValueError("No numeric columns available for K-means.")
-    return numeric_columns
-
-
-def _row_as_dict(dataframe: Frame, row_index: int, columns: Iterable[str]) -> dict[str, float]:
-    return {
-        column: float(dataframe[column][row_index])
-        for column in columns
-    }
-
-
-def _squared_distance(row: dict[str, float], centroid: dict[str, float], columns: Iterable[str]) -> float:
-    return sum(
-        (row[column] - centroid[column]) ** 2
-        for column in columns
-    )
-
-
-def randomly_init_centroids(dataframe: Frame, cluster_count: int, *, seed: Optional[int] = None) \
-        -> list[dict[str, float]]:
-    if cluster_count <= 0:
-        raise ValueError("Cluster count must be positive")
-    row_count, _ = dataframe.shape
-    if cluster_count > row_count:
-        raise ValueError("Cluster count cannot be greater than the number of data points")
-    random_generator = random.Random(seed)
-    columns = _numeric_columns(dataframe)
-    indices = random_generator.sample(range(row_count), cluster_count)
-    centroids = [
-        _row_as_dict(dataframe, index, columns)
-        for index in indices
-    ]
-    print("Initial centroids:")
-    print('\n'.join(
-        f'{index}: {centroid}'
-        for index, centroid in enumerate(centroids)
-    ))
-    return centroids
+from unsupervized_learning.node import Node
 
 
 class KMeans:
-    def __init__(
-            self,
-            cluster_count: int,
-            *,
-            random_state: Optional[int] = None,
-            metric: Optional[ClusteringMetric] = None,
-    ) -> None:
-        if cluster_count <= 1:
-            raise ValueError("Cluster count must be greater than 1 for K-means")
-        self._config = AlgorithmConfiguration(
-            cluster_count=cluster_count,
-            random_state=random_state
-        )
-        self._metric: ClusteringMetric = metric or NotImplementedMetric()
-        self._centroids: Optional[list[dict[str, float]]] = None
+    def __init__(self, cluster_count: int, max_iterations: int = 100, tolerance: float = 1e-4):
+        self.k = cluster_count
+        self.max_iterations = max_iterations
+        self.tolerance = tolerance
+        self.centroids: List[Node] = []
+        self.clusters: List[List[Node]] = []
 
-    @property
-    def centroids(self) -> Optional[list[dict[str, float]]]:
-        return self._centroids
+    def fit(self, data: List[Node]):
+        self.centroids = [
+            data[index].copy()
+            for index in random.sample(range(len(data)), self.k)
+        ]
 
-    @property
-    def config(self) -> AlgorithmConfiguration:
-        return self._config
+        for iteration in range(self.max_iterations):
+            self.clusters = [[] for _ in range(self.k)]
 
-    def fit(self, data: Frame) -> KMeans:
-        self._centroids = randomly_init_centroids(
-            data,
-            self._config.cluster_count,
-            seed=self._config.random_state
-        )
-        return self
+            for point in data:
+                distances: List[float] = [
+                    self._euclidean_distance(point, centroid)
+                    for centroid in self.centroids
+                ]
+                closest_index = np.argmin(distances)
+                self.clusters[closest_index].append(point)
 
-    def predict(self, data: Frame) -> list[int]:
-        raise NotImplementedError("KMeans.predict is not implemented yet.")
+            previous_centroids: List[Node] = [
+                centroid.copy()
+                for centroid in self.centroids
+            ]
 
-    def fit_predict(self, data: Frame) -> list[int]:
-        self.fit(data)
-        return self.predict(data)
+            for index in range(self.k):
+                cluster_points: List[Node] = self.clusters[index]
 
+                if len(cluster_points) > 0:
+                    self.centroids[index] = np.mean(cluster_points, axis=0)
+                else:
+                    self.centroids[index] = data[random.randint(0, len(data) - 1)].copy()
 
-if __name__ == "__main__":
-    frame: Frame = load_data()
-    randomly_init_centroids(frame, 5)
+            total_centroid_shift: float = sum(
+                self._euclidean_distance(previous, current)
+                for previous, current in zip(previous_centroids, self.centroids)
+            )
+
+            if total_centroid_shift < self.tolerance:
+                print(f"Converged at iteration {iteration}")
+                break
+
+    def predict(self, point: Node) -> int:
+        distances: list[float] = [
+            self._euclidean_distance(point, centroid)
+            for centroid in self.centroids
+        ]
+        return int(np.argmin(distances) + 1)
+
+    @staticmethod
+    def _euclidean_distance(first_node: Node, second_node: Node) -> float:
+        return np.sqrt(np.sum((first_node - second_node) ** 2))

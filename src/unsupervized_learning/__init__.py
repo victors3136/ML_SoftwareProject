@@ -1,9 +1,5 @@
-from .kmeans import KMeans, AlgorithmConfiguration
-from .metrics import ClusteringMetric, NotImplementedMetric
+from .kmeans import KMeans
 
 __all__ = [
     "KMeans",
-    "AlgorithmConfiguration",
-    "ClusteringMetric",
-    "NotImplementedMetric",
 ]

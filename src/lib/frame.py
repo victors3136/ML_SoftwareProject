@@ -57,6 +57,9 @@ class Frame:
             self._column_keys.append(column)
         self._data[column] = values_list
 
+    def __len__(self) -> int:
+        return self._row_count
+
     def head(self, row_count: int = 5) -> Frame:
         row_count = max(0, min(row_count, self._row_count))
         return Frame({
@@ -74,7 +77,7 @@ class Frame:
 
     def drop_duplicates(self) -> Frame:
         if not self._column_keys:
-            return Frame({})
+            return Frame()
         seen: set[tuple[Any, ...]] = set()
         keep_indices: list[int] = []
         for row_id in range(self._row_count):
@@ -89,6 +92,28 @@ class Frame:
             column_key: [
                 self._data[column_key][index]
                 for index in keep_indices
+            ] for column_key in self._column_keys
+        })
+
+    def dropna(self) -> Frame:
+        if not self._column_keys:
+            return Frame()
+
+        rows_to_keep: list[int] = []
+
+        for row_id in range(self._row_count):
+            if not any(
+                    self._data[col][row_id] is None
+                    for col in self._column_keys
+            ): rows_to_keep.append(row_id)
+
+        if len(rows_to_keep) == self._row_count:
+            return self
+
+        return Frame({
+            column_key: [
+                self._data[column_key][row_id]
+                for row_id in rows_to_keep
             ] for column_key in self._column_keys
         })
 
@@ -163,7 +188,7 @@ class Frame:
 
     def shuffle(self) -> Frame:
         if self._row_count == 0 or not self._column_keys:
-            return Frame({})
+            return Frame()
         indices = list(range(self._row_count))
         random.shuffle(indices)
         shuffled_data: FrameData = {
