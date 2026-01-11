@@ -100,8 +100,21 @@ class Node(np.ndarray):
         return Node._wrap(result, id_value=self.id)
 
     def _binary_apply(self, rhs, operation):
-        result = operation(self.view(np.ndarray), rhs)
-        return Node._wrap(result, id_value=self.id)
+        try:
+            if isinstance(rhs, Node):
+                rhs_data = rhs.view(np.ndarray)
+            else:
+                rhs_data = rhs
+
+            result = operation(self.view(np.ndarray), rhs_data)
+            return Node._wrap(result, id_value=self.id)
+        except TypeError:
+            print("AAAA")
+            raise RuntimeError()
+
+    def copy(self, **kwargs):
+        raw_copy = self.view(np.ndarray).copy()
+        return Node._wrap(raw_copy, id_value=self.id)
 
     def _reverse_binary_apply(self, lhs, operation):
         result = operation(lhs, self.view(np.ndarray))

@@ -30,19 +30,25 @@ def make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineSt
             return frame.drop(columns_to_drop=column_keys)
 
         steps.append(("drop columns", drop_columns_step))
+
     if full_options or "drop na" in options:
         steps.append(("drop na", lambda frame: frame.dropna()))
+
     if full_options or "drop duplicates" in options:
         steps.append(("drop duplicates", lambda frame: frame.drop_duplicates()))
+
     if full_options or "normalize" in options:
         steps.append(("normalize", lambda frame: DataFrameNormalizer.fit(frame)))
+
     if full_options or "encode ordinals" in options:
         steps.append(("encode ordinals", lambda frame: DataFrameEncoder().fit(frame)))
+
     return steps
 
 
 def apply_pipeline(frame: Frame, steps: List[PipelineStep]) -> Frame:
     for step_name, apply_step in steps:
+        print(f"applying {step_name}")
         frame = apply_step(frame)
     return frame
 

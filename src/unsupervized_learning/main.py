@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 
 from lib.features import BaseFeatures
 from lib.frame import Frame
@@ -30,6 +30,7 @@ _pipeline = make_pipeline(
     _irrelevant_features,
     "drop duplicates",
     "drop columns",
+    "drop na",
     "encode ordinals",
     "normalize",
 )
@@ -37,8 +38,13 @@ _pipeline = make_pipeline(
 if __name__ == "__main__":
     print("Loading Data...")
     raw_data: Frame = load_data(shuffle=True)
-
     print(f"Loaded frame has shape: {raw_data.shape}")
+
+    ground_truth_map = {}
+    for node_id in range(len(raw_data)):
+        row: dict[str, Any] = raw_data.get_row(node_id)
+        ground_truth_map[row['id']] = row.get('playlist_genre')
+    print(f"Ground truth map has {len(ground_truth_map)} items.")
 
     print("Processing Data...")
     processed_data: Frame = apply_pipeline(raw_data, _pipeline)
@@ -51,16 +57,19 @@ if __name__ == "__main__":
 
     print(f"Dataset prepared with {len(dataset)} items.")
 
-    K = 21
-    print(f"Initializing K-Means with K={K}...")
+    results: List[tuple[int, float, float, float]] = []
 
-    kmeans = KMeans(cluster_count=K)
+    for K in [3, 5, 10, 21, 35, 100]:
+        print(f"K-Means with K={K}...")
+        kmeans = KMeans(cluster_count=K)
+        kmeans.fit(dataset)
+        db_index = KMeans.davies_bouldin_index(kmeans.clusters, kmeans.centroids)
+        dunn = KMeans.dunn_index(kmeans.clusters, kmeans.centroids)
+        purity = KMeans.purity_score(kmeans.clusters, ground_truth_map)
 
-    print("Fitting model...")
-    kmeans.fit(dataset)
+        print(f"Davies-Bouldin Index: {db_index:.4f} (Lower is better)")
+        print(f"Dunn Index:           {dunn:.4f} (Higher is better)")
+        print(f"Purity Score:         {purity:.4f} (Higher is better)")
+        results.append((K, db_index, dunn, purity))
 
-    test_point = dataset[0]
-    cluster_idx = kmeans.predict(test_point)
-    print(f"First data point assigned to Cluster: {cluster_idx}")
-
-    print("Algorithm execution complete.")
+    print(f"Results: {results}")
