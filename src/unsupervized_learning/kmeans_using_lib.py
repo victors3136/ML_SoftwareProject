@@ -1,3 +1,4 @@
+import time
 from typing import List
 import numpy as np
 from sklearn.cluster import KMeans as SKLearnKMeans
@@ -20,7 +21,7 @@ class KMeansLibrary:
             max_iter=self.max_iterations,
             tol=self.tolerance,
             n_init=10,
-            random_state=42
+            random_state=int(time.time())
         )
         self._sklearn_model.fit(nodes)
 
