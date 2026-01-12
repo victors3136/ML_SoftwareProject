@@ -48,7 +48,7 @@ def make_pipeline(discard: Optional[Iterable[str]], *options) -> List[PipelineSt
 
 def apply_pipeline(frame: Frame, steps: List[PipelineStep]) -> Frame:
     for step_name, apply_step in steps:
-        print(f"applying {step_name}")
+        print(f"Applying pipeline step: '{step_name}'")
         frame = apply_step(frame)
     return frame
 

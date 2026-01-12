@@ -1,5 +1,5 @@
-from .kmeans import KMeans
+from .kmeans_from_scratch import KMeansFromScratch
 
 __all__ = [
-    "KMeans",
+    "KMeansFromScratch",
 ]
