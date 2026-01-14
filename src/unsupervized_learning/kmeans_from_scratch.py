@@ -1,5 +1,5 @@
 import random
-from typing import List
+from typing import List, Iterable
 
 import numpy as np
 
@@ -15,7 +15,8 @@ class KMeansFromScratch:
         self.centroids: List[Node] = []
         self.clusters: List[List[Node]] = []
 
-    def fit(self, data: List[Node]):
+    def fit(self, data: np.ndarray):
+
         self.centroids = [
             data[index].copy()
             for index in random.sample(range(len(data)), self.k)
@@ -57,9 +58,14 @@ class KMeansFromScratch:
             if total_centroid_shift < self.tolerance:
                 break
 
-    def predict(self, point: Node) -> int:
-        distances: list[float] = [
-            euclidean_distance(point, centroid)
-            for centroid in self.centroids
-        ]
-        return int(np.argmin(distances) + 1)
+    def predict(self, pt: Node | Iterable[Node]) -> int | Iterable[int]:
+        if isinstance(pt, Node):
+            return int(
+                np.argmin([
+                    euclidean_distance(pt, centroid)
+                    for centroid in self.centroids
+                ]) + 1
+            )
+        return np.array([
+            self.predict(point) for point in pt
+        ])

@@ -58,10 +58,10 @@ if __name__ == "__main__":
     processed_data: Frame = apply_pipeline(raw_data, _pipeline)
     print(f"After preprocessing, frame has shape: {processed_data.shape}")
 
-    dataset: List[Node] = [
+    dataset = np.array(
         Node.from_frame_row(row)
         for row in processed_data.head(len(processed_data))
-    ]
+    )
 
     print(f"Dataset prepared with {len(dataset)} items.")
 

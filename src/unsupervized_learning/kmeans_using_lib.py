@@ -14,7 +14,7 @@ class KMeansLibrary:
         self.clusters: List[List[Node]] = []
         self._sklearn_model = None
 
-    def fit(self, data: List[Node]):
+    def fit(self, data: np.ndarray):
         nodes = np.stack([node.view(np.ndarray) for node in data])
         self._sklearn_model = SKLearnKMeans(
             n_clusters=self.k,
